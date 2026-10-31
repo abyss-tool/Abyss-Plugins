@@ -1,0 +1,65 @@
+name: Sync Index
+
+# 插件中心索引聚合：从 13 个成员仓库（abyss-plugin-*）拉取 plugin.json /
+# 补丁通道 / Release APK 资产 → 重新生成 plugins.json → 有变化则提交。
+#
+# 触发：
+#   - workflow_dispatch（手动滚动，发布插件后立即聚合）
+#   - schedule（每日 20:00 北京时间 = 12:00 UTC，兜底滚动）
+#   - push 到 tools/（聚合器自身变更的自检）
+#
+# App 侧插件中心只读 plugins.json（单一事实源）—— 成员仓库的版本滚动与
+# APK 发布经由本工作流自动汇入索引，无需手工维护。
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 12 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/sync_index.py'
+
+concurrency:
+  group: sync-index
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Aggregate plugins.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Aggregate index from member repos
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/sync_index.py
+
+      - name: Validate aggregated index
+        run: |
+          chmod +x tools/validate_hub.py
+          python3 tools/validate_hub.py
+
+      - name: Commit & push (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "[sync] 无变化，无需提交"
+          else
+            git add plugins.json
+            git commit -m "chore(index): 聚合成员仓库 → plugins.json 自动滚动 [skip ci]"
+            git push
+            echo "[sync] ✓ 索引已提交"
+          fi
