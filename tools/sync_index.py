@@ -28,21 +28,19 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
-ORG = "Ultra-Guru"
+ORG = "abyss-tool"
+# v0.2 内置化重构：六个轻量插件（app-manager / shizuku-kit / automation /
+# island / wallpaper / qr-craft）并入主壳内置路线，仓库已归档，不再聚合；
+# 只有「重」的能力（原生工具链 / 独立进程 / 大型框架）才留在插件生态。
 REPOS = [
     "abyss-plugin-terminal",
     "abyss-plugin-python-lab",
-    "abyss-plugin-shizuku-kit",
-    "abyss-plugin-app-manager",
     "abyss-plugin-sandbox",
     "abyss-plugin-disguise",
     "abyss-plugin-media-lab",
-    "abyss-plugin-automation",
-    "abyss-plugin-island",
-    "abyss-plugin-wallpaper",
     "abyss-plugin-network-guard",
-    "abyss-plugin-qr-craft",
     "abyss-plugin-backup",
+    "abyss-plugin-app-builder",
 ]
 INDEX_PATH = "plugins.json"
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
@@ -137,6 +135,11 @@ def main() -> None:
             "patchChannel": raw(repo, "patches/index.json"),
             "roadmap": manifest.get("roadmap", []),
         }
+        # Shizuku 独立授权声明透传（独立 APK 插件按 per-app 授权，宿主
+        # 授权不继承 —— 客户端详情页据此展示单独授权引导）
+        shizuku = manifest.get("shizuku")
+        if isinstance(shizuku, dict):
+            entry["shizuku"] = shizuku
         if channel_latest is not None and channel_latest != entry["version"]:
             warnings.append(
                 f"{repo}: 补丁通道 latest({channel_latest}) 与 manifest 版本({entry['version']}) 不一致"
@@ -148,7 +151,7 @@ def main() -> None:
         sys.exit(1)
 
     entries.sort(key=lambda p: (p["category"], p["id"]))
-    hub_version = old.get("hubVersion", "0.1.0")
+    hub_version = old.get("hubVersion", "0.2.0")
     index = {
         "schema": "abyss-plugin-index-v1",
         "generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

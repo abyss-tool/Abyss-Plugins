@@ -6,13 +6,13 @@ import sys
 from pathlib import Path
 
 SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
-REPO = re.compile(r"^Ultra-Guru/abyss-plugin-[a-z0-9]+(-[a-z0-9]+)*$")
+REPO = re.compile(r"^abyss-tool/abyss-plugin-[a-z0-9]+(-[a-z0-9]+)*$")
 CHANNEL = re.compile(
-    r"^https://raw\.githubusercontent\.com/Ultra-Guru/abyss-plugin-[a-z0-9-]+/main/patches/index\.json$"
+    r"^https://raw\.githubusercontent\.com/abyss-tool/abyss-plugin-[a-z0-9-]+/main/patches/index\.json$"
 )
 REQUIRED = ("id", "name", "repo", "category", "version", "minApp", "summary")
 CATEGORIES = {"terminal", "system", "sandbox", "disguise", "media",
-              "automation", "desktop", "network", "data", "tools"}
+              "automation", "desktop", "network", "data", "tools", "dev"}
 
 errors = []
 
@@ -25,8 +25,8 @@ data = json.loads(Path("plugins.json").read_text(encoding="utf-8"))
 if data.get("schema") != "abyss-plugin-index-v1":
     fail("plugins.json.schema 应为 abyss-plugin-index-v1")
 plugins = data.get("plugins", [])
-if len(plugins) < 10:
-    fail(f"插件中心至少登记 10 个大插件（当前 {len(plugins)}）—— 深渊工具的体量红线")
+if len(plugins) < 8:
+    fail(f"插件中心至少登记 8 个大插件（当前 {len(plugins)}）—— v0.2 内置化重构后的体量红线（小功能内置主壳，只有重型能力独立成仓）")
 
 ids = set()
 for p in plugins:
@@ -51,6 +51,14 @@ for p in plugins:
         fail(f"{where}: patchChannel 形态非法 → {p.get('patchChannel')!r}")
     if p.get("apk") is not None and not p["apk"].get("url"):
         fail(f"{where}: apk.url 缺失")
+    shizuku = p.get("shizuku")
+    if shizuku is not None:
+        if not isinstance(shizuku, dict):
+            fail(f"{where}: shizuku 应为对象（ownAuth + reason）")
+        elif shizuku.get("ownAuth") is not True:
+            fail(f"{where}: shizuku.ownAuth 声明即独立授权，必须为 true")
+        elif not shizuku.get("reason"):
+            fail(f"{where}: shizuku.reason 缺失 —— 需向用户解释单独授权原因")
 
 if errors:
     print(f"[hub-ci] ✗ {len(errors)} 处校验失败：", file=sys.stderr)

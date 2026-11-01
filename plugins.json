@@ -1,33 +1,12 @@
 {
   "schema": "abyss-plugin-index-v1",
-  "generatedAt": "2026-10-31T17:05:28Z",
-  "hubVersion": "0.1.0",
+  "generatedAt": "2026-11-01T02:35:10Z",
+  "hubVersion": "0.2.0",
   "plugins": [
-    {
-      "id": "abyss-plugin-automation",
-      "name": "自动化编排",
-      "repo": "Ultra-Guru/abyss-plugin-automation",
-      "category": "automation",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "任务蓝图 JSON 调度引擎：shell / python / ui_toast 步骤链 + 定时任务 + 触发器。",
-      "icon": "⚡",
-      "permissions": [
-        "FOREGROUND_SERVICE",
-        "RECEIVE_BOOT_COMPLETED"
-      ],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-automation/main/patches/index.json",
-      "roadmap": [
-        "v0.2 蓝图解析与执行",
-        "v0.3 定时任务",
-        "v0.4 进阶任务解锁"
-      ]
-    },
     {
       "id": "abyss-plugin-backup",
       "name": "备份迁移",
-      "repo": "Ultra-Guru/abyss-plugin-backup",
+      "repo": "abyss-tool/abyss-plugin-backup",
       "category": "data",
       "version": "0.1.0",
       "minApp": "0.1.0",
@@ -35,7 +14,7 @@
       "icon": "💾",
       "permissions": [],
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-backup/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-backup/main/patches/index.json",
       "roadmap": [
         "v0.2 配置与插件备份",
         "v0.3 应用数据抽取",
@@ -43,47 +22,37 @@
       ]
     },
     {
-      "id": "abyss-plugin-island",
-      "name": "灵动岛与悬浮球",
-      "repo": "Ultra-Guru/abyss-plugin-island",
-      "category": "desktop",
+      "id": "abyss-plugin-app-builder",
+      "name": "应用构建器",
+      "repo": "abyss-tool/abyss-plugin-app-builder",
+      "category": "dev",
       "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "WindowManager 悬浮件：灵动岛状态动画 / 悬浮球拖拽吸附 / 任意页全局可达。",
-      "icon": "🌊",
+      "minApp": "0.2.0",
+      "summary": "手机端 APK 构建器：Alpine + PRoot 底座，Anpyra / 内置工具链 / 标准 Gradle 三条路径自由选择，失败可切换，支持独立 Shizuku 授权。",
+      "icon": "🏗",
       "permissions": [
-        "SYSTEM_ALERT_WINDOW"
+        "FOREGROUND_SERVICE",
+        "WAKE_LOCK",
+        "REQUEST_INSTALL_PACKAGES"
       ],
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-island/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-app-builder/main/patches/index.json",
       "roadmap": [
-        "v0.2 悬浮球与拖拽",
-        "v0.3 灵动岛动画",
-        "v0.4 桌面组件（Glance）"
-      ]
-    },
-    {
-      "id": "abyss-plugin-wallpaper",
-      "name": "动态壁纸引擎",
-      "repo": "Ultra-Guru/abyss-plugin-wallpaper",
-      "category": "desktop",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "WallpaperService 引擎：与主壳液态玻璃同源视觉的动态壁纸工坊。",
-      "icon": "🖼",
-      "permissions": [],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-wallpaper/main/patches/index.json",
-      "roadmap": [
-        "v0.2 WallpaperService 骨架",
-        "v0.3 玻璃材质壁纸",
-        "v0.4 壁纸工坊市场"
-      ]
+        "v0.2 底座拉起：Alpine rootfs + PRoot 可用性探测（Shizuku 优先，纯 PRoot 降级）",
+        "v0.3 路径一：Anpyra 纯 Python 构建（轻量项目）",
+        "v0.4 路径二：内置工具链 aapt2 + 固定壳 DEX（资源 / HTML 打包）",
+        "v0.5 路径三：标准 Gradle 构建（ARM64 工具链 + 资源约束）",
+        "v0.6 三选一交互层：预检提示 / 推荐标记 / 失败切换 / 底座隔离"
+      ],
+      "shizuku": {
+        "ownAuth": true,
+        "reason": "构建底座（Alpine + PRoot）经 Shizuku 的 ADB shell 上下文启动，绕过 ColorOS 等厂商对普通应用 ptrace 的限制；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
+      }
     },
     {
       "id": "abyss-plugin-disguise",
       "name": "设备伪装",
-      "repo": "Ultra-Guru/abyss-plugin-disguise",
+      "repo": "abyss-tool/abyss-plugin-disguise",
       "category": "disguise",
       "version": "0.1.0",
       "minApp": "0.1.0",
@@ -94,7 +63,7 @@
         "BLUETOOTH_ADVERTISE"
       ],
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-disguise/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-disguise/main/patches/index.json",
       "roadmap": [
         "v0.2 机型与构建指纹伪装",
         "v0.3 定位 / 电量伪造",
@@ -104,7 +73,7 @@
     {
       "id": "abyss-plugin-media-lab",
       "name": "媒体实验室",
-      "repo": "Ultra-Guru/abyss-plugin-media-lab",
+      "repo": "abyss-tool/abyss-plugin-media-lab",
       "category": "media",
       "version": "0.1.0",
       "minApp": "0.1.0",
@@ -115,7 +84,7 @@
         "READ_MEDIA_AUDIO"
       ],
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-media-lab/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-media-lab/main/patches/index.json",
       "roadmap": [
         "v0.2 FFmpeg 管线封装",
         "v0.3 批量剪辑 UI",
@@ -125,7 +94,7 @@
     {
       "id": "abyss-plugin-network-guard",
       "name": "网络守护",
-      "repo": "Ultra-Guru/abyss-plugin-network-guard",
+      "repo": "abyss-tool/abyss-plugin-network-guard",
       "category": "network",
       "version": "0.1.0",
       "minApp": "0.1.0",
@@ -135,7 +104,7 @@
         "BIND_VPN_SERVICE"
       ],
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-network-guard/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-network-guard/main/patches/index.json",
       "roadmap": [
         "v0.2 VpnService 骨架",
         "v0.3 流量画像",
@@ -145,7 +114,7 @@
     {
       "id": "abyss-plugin-sandbox",
       "name": "沙箱双开",
-      "repo": "Ultra-Guru/abyss-plugin-sandbox",
+      "repo": "abyss-tool/abyss-plugin-sandbox",
       "category": "sandbox",
       "version": "0.1.0",
       "minApp": "0.1.0",
@@ -153,7 +122,7 @@
       "icon": "🧊",
       "permissions": [],
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-sandbox/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-sandbox/main/patches/index.json",
       "roadmap": [
         "v0.2 沙箱容器引擎",
         "v0.3 免安装运行",
@@ -161,45 +130,9 @@
       ]
     },
     {
-      "id": "abyss-plugin-app-manager",
-      "name": "应用管理器",
-      "repo": "Ultra-Guru/abyss-plugin-app-manager",
-      "category": "system",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "应用冻结 / 隐藏 / 强制停止 / 提取安装包 / 图标伪装（pm hide / disable-user / set-component-enabled-setting）。",
-      "icon": "📦",
-      "permissions": [],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-app-manager/main/patches/index.json",
-      "roadmap": [
-        "v0.2 应用列表与冻结",
-        "v0.3 提取安装包",
-        "v0.4 ActivityAlias 图标伪装"
-      ]
-    },
-    {
-      "id": "abyss-plugin-shizuku-kit",
-      "name": "Shizuku 工具箱",
-      "repo": "Ultra-Guru/abyss-plugin-shizuku-kit",
-      "category": "system",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "免 Root 提权指令面板：appops / settings / dumpsys 的可视化封装，全部系统工具的权限地基。",
-      "icon": "🛡",
-      "permissions": [],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-shizuku-kit/main/patches/index.json",
-      "roadmap": [
-        "v0.2 Shizuku 绑定与授权引导",
-        "v0.3 指令面板 UI",
-        "v0.4 dumpsys 图表化"
-      ]
-    },
-    {
       "id": "abyss-plugin-python-lab",
       "name": "Python 游乐场",
-      "repo": "Ultra-Guru/abyss-plugin-python-lab",
+      "repo": "abyss-tool/abyss-plugin-python-lab",
       "category": "terminal",
       "version": "0.1.0",
       "minApp": "0.1.0",
@@ -209,7 +142,7 @@
         "INTERNET"
       ],
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-python-lab/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-python-lab/main/patches/index.json",
       "roadmap": [
         "v0.2 脚本编辑器与执行沙箱",
         "v0.3 pip 离线包管理",
@@ -219,7 +152,7 @@
     {
       "id": "abyss-plugin-terminal",
       "name": "终端引擎",
-      "repo": "Ultra-Guru/abyss-plugin-terminal",
+      "repo": "abyss-tool/abyss-plugin-terminal",
       "category": "terminal",
       "version": "0.1.1",
       "minApp": "0.1.0",
@@ -231,31 +164,11 @@
         "WAKE_LOCK"
       ],
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-terminal/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-terminal/main/patches/index.json",
       "roadmap": [
         "v0.2 伪终端渲染内核（VT/ANSI）",
         "v0.3 bootstrap 根文件系统",
         "v0.4 快捷命令键盘与主题工坊"
-      ]
-    },
-    {
-      "id": "abyss-plugin-qr-craft",
-      "name": "二维码工坊",
-      "repo": "Ultra-Guru/abyss-plugin-qr-craft",
-      "category": "tools",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "ZXing 生成 / 解析 / 网页转二维码，一键分享。",
-      "icon": "🔳",
-      "permissions": [
-        "CAMERA"
-      ],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/Ultra-Guru/abyss-plugin-qr-craft/main/patches/index.json",
-      "roadmap": [
-        "v0.2 生成与解析",
-        "v0.3 网页转码",
-        "v0.4 批量美化"
       ]
     }
   ]
