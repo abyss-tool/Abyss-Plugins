@@ -4,7 +4,7 @@
 
 ### 八个重型大插件的聚合索引 · 小功能内置主壳 · 大功能插件化 · 独立 CI / 独立补丁通道
 
-[![Hub CI](https://github.com/Ultra-Guru/Abyss-Plugins/actions/workflows/hub-ci.yml/badge.svg?branch=main)](https://github.com/Ultra-Guru/Abyss-Plugins/actions/workflows/hub-ci.yml)
+[![Hub CI](https://github.com/abyss-tool/Abyss-Plugins/actions/workflows/hub-ci.yml/badge.svg?branch=main)](https://github.com/abyss-tool/Abyss-Plugins/actions/workflows/hub-ci.yml)
 
 </div>
 
