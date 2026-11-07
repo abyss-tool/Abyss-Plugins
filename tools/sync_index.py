@@ -36,7 +36,6 @@ REPOS = [
     "abyss-plugin-terminal",
     "abyss-plugin-python-lab",
     "abyss-plugin-sandbox",
-    "abyss-plugin-disguise",
     "abyss-plugin-media-lab",
     "abyss-plugin-network-guard",
     "abyss-plugin-backup",
