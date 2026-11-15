@@ -1,6 +1,6 @@
 {
   "schema": "abyss-plugin-index-v1",
-  "generatedAt": "2026-11-15T07:00:00Z",
+  "generatedAt": "2026-11-15T06:35:11Z",
   "hubVersion": "0.3.0",
   "plugins": [
     {
@@ -45,10 +45,6 @@
         "FOREGROUND_SERVICE",
         "WAKE_LOCK"
       ],
-      "shizuku": {
-        "ownAuth": true,
-        "reason": "QEMU 用户态引擎在无 Root 设备上需更大内存映射与进程优先级，经 Shizuku（ADB shell 上下文）拉起以绕过普通应用进程的 RLIMIT_MEMLOCK 与 oom_adj 限制；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
-      },
       "apk": null,
       "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-virtual-machine/main/patches/index.json",
       "roadmap": [
@@ -56,7 +52,11 @@
         "v0.3 VNC 显示管线 + 输入路由（触屏 → PS/2 / USB Tablet）",
         "v0.4 镜像市场：Alpine / Debian / DOS / Windows XP 模板",
         "v0.5 快照 / 挂起恢复与性能档位"
-      ]
+      ],
+      "shizuku": {
+        "ownAuth": true,
+        "reason": "QEMU 用户态引擎在无 Root 设备上需更大内存映射与进程优先级，经 Shizuku（ADB shell 上下文）拉起以绕过普通应用进程的 RLIMIT_MEMLOCK 与 oom_adj 限制；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
+      }
     },
     {
       "id": "abyss-plugin-virus-guard",
@@ -65,17 +65,13 @@
       "category": "system",
       "version": "0.1.0",
       "minApp": "0.8.0",
-      "summary": "安装事件拦截 + 病毒特征引擎：ClamAV 级本地签名库 + VirusTotal 云查询 + 已装应用全盘扫描与处置面板，支持独立 Shizuku 授权（安装监听）。",
+      "summary": "安装事件拦截 + 病毒特征引擎：ClamAV 级本地签名库 + VirusTotal 云查询 + 已装应用全盘扫描与处置面板，支持独立 Shizuku 授权（安装监听与静默处置）。",
       "icon": "🦠",
       "permissions": [
         "INTERNET",
         "FOREGROUND_SERVICE",
         "RECEIVE_BOOT_COMPLETED"
       ],
-      "shizuku": {
-        "ownAuth": true,
-        "reason": "安装事件拦截经 Shizuku（ADB shell 上下文）挂接 pm install-session 监听与静默卸载处置 —— 免 Shizuku 时降级为普通安装广播监听（仅提示，不能拦截）；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
-      },
       "apk": null,
       "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-virus-guard/main/patches/index.json",
       "roadmap": [
@@ -83,7 +79,11 @@
         "v0.3 本地特征引擎：ClamAV 签名库移植 + 哈希黑名单",
         "v0.4 VirusTotal 云查询（限额调度 + 结果缓存）",
         "v0.5 全盘扫描与处置面板（隔离 / 卸载引导 / 白名单）"
-      ]
+      ],
+      "shizuku": {
+        "ownAuth": true,
+        "reason": "安装事件拦截经 Shizuku（ADB shell 上下文）挂接 pm install-session 监听与静默卸载处置 —— 免 Shizuku 时降级为普通安装广播监听（仅提示，不能拦截）；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
+      }
     }
   ]
 }
