@@ -25,8 +25,8 @@ data = json.loads(Path("plugins.json").read_text(encoding="utf-8"))
 if data.get("schema") != "abyss-plugin-index-v1":
     fail("plugins.json.schema 应为 abyss-plugin-index-v1")
 plugins = data.get("plugins", [])
-if len(plugins) < 7:
-    fail(f"插件中心至少登记 7 个大插件（当前 {len(plugins)}）—— v0.3 伪装四件套内置化后的体量红线（小功能内置主壳，只有重型能力独立成仓）")
+if len(plugins) < 3:
+    fail(f"插件中心至少登记 3 个引擎级插件（当前 {len(plugins)}）—— v0.8.0 大内置化后的体量红线（六重型插件已并入主壳，只保留构建 / 病毒 / 虚拟机三个引擎级插件）")
 
 ids = set()
 for p in plugins:

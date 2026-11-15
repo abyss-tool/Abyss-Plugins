@@ -1,26 +1,8 @@
 {
   "schema": "abyss-plugin-index-v1",
-  "generatedAt": "2026-11-14T17:50:21Z",
-  "hubVersion": "0.2.0",
+  "generatedAt": "2026-11-15T07:00:00Z",
+  "hubVersion": "0.3.0",
   "plugins": [
-    {
-      "id": "abyss-plugin-backup",
-      "name": "备份迁移",
-      "repo": "abyss-tool/abyss-plugin-backup",
-      "category": "data",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "应用数据备份 / 跨设备迁移 / 恢复工厂（含插件与配置的整体迁移）。",
-      "icon": "💾",
-      "permissions": [],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-backup/main/patches/index.json",
-      "roadmap": [
-        "v0.2 配置与插件备份",
-        "v0.3 应用数据抽取",
-        "v0.4 跨设备迁移"
-      ]
-    },
     {
       "id": "abyss-plugin-app-builder",
       "name": "应用构建器",
@@ -50,104 +32,57 @@
       }
     },
     {
-      "id": "abyss-plugin-media-lab",
-      "name": "媒体实验室",
-      "repo": "abyss-tool/abyss-plugin-media-lab",
-      "category": "media",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "FFmpeg 批量剪辑 / 音频提取 / 无痕导出 —— 可视化参数输入，Python 后台执行。",
-      "icon": "🎬",
-      "permissions": [
-        "READ_MEDIA_VIDEO",
-        "READ_MEDIA_AUDIO"
-      ],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-media-lab/main/patches/index.json",
-      "roadmap": [
-        "v0.2 FFmpeg 管线封装",
-        "v0.3 批量剪辑 UI",
-        "v0.4 无痕导出"
-      ]
-    },
-    {
-      "id": "abyss-plugin-network-guard",
-      "name": "网络守护",
-      "repo": "abyss-tool/abyss-plugin-network-guard",
-      "category": "network",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "VpnService 虚拟网卡：域名画像 / 异常传输拦截 / 恶意行为告警（插件风险深度查询）。",
-      "icon": "📡",
-      "permissions": [
-        "BIND_VPN_SERVICE"
-      ],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-network-guard/main/patches/index.json",
-      "roadmap": [
-        "v0.2 VpnService 骨架",
-        "v0.3 流量画像",
-        "v0.4 VirusTotal 对接"
-      ]
-    },
-    {
-      "id": "abyss-plugin-sandbox",
-      "name": "沙箱双开",
-      "repo": "abyss-tool/abyss-plugin-sandbox",
+      "id": "abyss-plugin-virtual-machine",
+      "name": "虚拟机",
+      "repo": "abyss-tool/abyss-plugin-virtual-machine",
       "category": "sandbox",
       "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "VirtualApp 血统虚拟空间：外部 APK 免安装直接运行 + API 接管（多开 / 伪装 / 隔离的执行底座）。",
-      "icon": "🧊",
-      "permissions": [],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-sandbox/main/patches/index.json",
-      "roadmap": [
-        "v0.2 沙箱容器引擎",
-        "v0.3 免安装运行",
-        "v0.4 Hook 层数据伪造"
-      ]
-    },
-    {
-      "id": "abyss-plugin-python-lab",
-      "name": "Python 游乐场",
-      "repo": "abyss-tool/abyss-plugin-python-lab",
-      "category": "terminal",
-      "version": "0.1.0",
-      "minApp": "0.1.0",
-      "summary": "Chaquopy 引擎：numpy / opencv 脚本执行 + HTML 实时渲染预览，复杂自动化逻辑的后端。",
-      "icon": "🐍",
-      "permissions": [
-        "INTERNET"
-      ],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-python-lab/main/patches/index.json",
-      "roadmap": [
-        "v0.2 脚本编辑器与执行沙箱",
-        "v0.3 pip 离线包管理",
-        "v0.4 HTML 渲染预览"
-      ]
-    },
-    {
-      "id": "abyss-plugin-terminal",
-      "name": "终端引擎",
-      "repo": "abyss-tool/abyss-plugin-terminal",
-      "category": "terminal",
-      "version": "0.1.1",
-      "minApp": "0.1.0",
-      "summary": "Termux 血统的内置 Linux 终端：黑底白字 / 快捷命令键盘 / 前台服务保活，深渊工具的灵魂模块。",
-      "icon": "🖥",
+      "minApp": "0.8.0",
+      "summary": "QEMU 级完整虚拟机：ARM/x86 系统镜像运行（Alpine / Windows / DOS），VNC 显示与外部输入路由，快照与性能档位，引擎级大插件。",
+      "icon": "🖳",
       "permissions": [
         "INTERNET",
         "FOREGROUND_SERVICE",
         "WAKE_LOCK"
       ],
+      "shizuku": {
+        "ownAuth": true,
+        "reason": "QEMU 用户态引擎在无 Root 设备上需更大内存映射与进程优先级，经 Shizuku（ADB shell 上下文）拉起以绕过普通应用进程的 RLIMIT_MEMLOCK 与 oom_adj 限制；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
+      },
       "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-terminal/main/patches/index.json",
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-virtual-machine/main/patches/index.json",
       "roadmap": [
-        "v0.2 伪终端渲染内核（VT/ANSI）",
-        "v0.3 bootstrap 根文件系统",
-        "v0.4 快捷命令键盘与主题工坊"
+        "v0.2 QEMU 用户态引擎拉起（TCG，免 KVM）与镜像管理",
+        "v0.3 VNC 显示管线 + 输入路由（触屏 → PS/2 / USB Tablet）",
+        "v0.4 镜像市场：Alpine / Debian / DOS / Windows XP 模板",
+        "v0.5 快照 / 挂起恢复与性能档位"
+      ]
+    },
+    {
+      "id": "abyss-plugin-virus-guard",
+      "name": "病毒拦截",
+      "repo": "abyss-tool/abyss-plugin-virus-guard",
+      "category": "system",
+      "version": "0.1.0",
+      "minApp": "0.8.0",
+      "summary": "安装事件拦截 + 病毒特征引擎：ClamAV 级本地签名库 + VirusTotal 云查询 + 已装应用全盘扫描与处置面板，支持独立 Shizuku 授权（安装监听）。",
+      "icon": "🦠",
+      "permissions": [
+        "INTERNET",
+        "FOREGROUND_SERVICE",
+        "RECEIVE_BOOT_COMPLETED"
+      ],
+      "shizuku": {
+        "ownAuth": true,
+        "reason": "安装事件拦截经 Shizuku（ADB shell 上下文）挂接 pm install-session 监听与静默卸载处置 —— 免 Shizuku 时降级为普通安装广播监听（仅提示，不能拦截）；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
+      },
+      "apk": null,
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-virus-guard/main/patches/index.json",
+      "roadmap": [
+        "v0.2 拦截骨架：安装广播 + 会话监听 + 信任判定管线",
+        "v0.3 本地特征引擎：ClamAV 签名库移植 + 哈希黑名单",
+        "v0.4 VirusTotal 云查询（限额调度 + 结果缓存）",
+        "v0.5 全盘扫描与处置面板（隔离 / 卸载引导 / 白名单）"
       ]
     }
   ]

@@ -29,17 +29,14 @@ import urllib.request
 from datetime import datetime, timezone
 
 ORG = "abyss-tool"
-# v0.2 内置化重构：六个轻量插件（app-manager / shizuku-kit / automation /
-# island / wallpaper / qr-craft）并入主壳内置路线，仓库已归档，不再聚合；
-# 只有「重」的能力（原生工具链 / 独立进程 / 大型框架）才留在插件生态。
+# v0.8.0 大内置化：原六个重型插件（terminal / python-lab / sandbox /
+# media-lab / network-guard / backup）全部并入主壳内置路线，仓库已归档，
+# 不再聚合；插件生态收缩为「自带完整引擎」的三个代表 ——
+# 应用构建器（构建底座）/ 病毒拦截（特征引擎）/ 虚拟机（QEMU）。
 REPOS = [
-    "abyss-plugin-terminal",
-    "abyss-plugin-python-lab",
-    "abyss-plugin-sandbox",
-    "abyss-plugin-media-lab",
-    "abyss-plugin-network-guard",
-    "abyss-plugin-backup",
     "abyss-plugin-app-builder",
+    "abyss-plugin-virus-guard",
+    "abyss-plugin-virtual-machine",
 ]
 INDEX_PATH = "plugins.json"
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
