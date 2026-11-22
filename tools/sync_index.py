@@ -188,8 +188,11 @@ def main() -> None:
     }
 
     # ── 幂等写回：与现文件语义等价则不动（避免无意义的 CI 提交）────────
-    def normalize(obj: dict) -> str:
-        return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2)
+    # generatedAt 不参与等价判定（每日滚动仅时间戳变化 = 无变化 → 跳过，
+    # 不触发签名材料强制 —— 真实变化才需要签名与提交）。
+    def normalize(obj: dict) -> dict:
+        semantic = {k: v for k, v in obj.items() if k != "generatedAt"}
+        return semantic
 
     changed = normalize(index) != normalize(old)
     sig_path = Path(INDEX_PATH + ".minisig")
