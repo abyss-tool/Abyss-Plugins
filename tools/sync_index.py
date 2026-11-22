@@ -2,20 +2,20 @@
 """插件中心索引聚合器：从插件仓库群（abyss-plugin-*）重新生成 plugins.json。
 
 数据源（每个成员仓库，main 分支）：
-  1. 根 plugin.json          —— manifest（id / name / version / category / …）
+  1. 根 plugin.json          —— manifest（id / name / version / category / …
+                                以及 hubVersion 0.4.0 起透传的 v2 字段：
+                                minHost / provides / depends / capabilities /
+                                assetChannel）
   2. patches/index.json      —— 补丁通道（latest 版本，容忍缺失）
   3. GitHub Releases API     —— APK 资产（url / sizeBytes / digest 摘要）；
                                 无发布 → apk 保持 null（框架预览期常态）
 
-N-SEC-001（M1 起）：plugins.json 落盘后立即产出 detached 签名
-`plugins.json.minisig`（与清单同 commit 原子上库）—— 私钥经
---seed-file（CI secret RELEASE_SIGNING_KEY 原文 base64 单行），公钥经
---pubkey-file（与客户端 TRUSTED_KEYS / 主仓 publisher_pubkey.py 提取值
-一致）；索引有变化而签名材料缺失 → fail-closed 拒绝滚动。
-
 聚合纪律：
   - 成员仓库清单是插件中心仓的注册表（本文件 REPOS）—— 新插件仓库加入
     时在此登记（docs/ADDING_PLUGINS.md 有全流程）；
+  - **归档仓库不再聚合**（HUB-014）：abyss-plugin-virtual-machine 已按
+    ADR-100 D-4 归档，其 QEMU 能力由 abyss-plugin-linux 的 QEMU_VM 执行
+    域承接，索引随之移除（SRS-102 FR-004）；
   - 单个成员仓库拉取失败 → 保留旧索引条目并告警（不让一个坏仓库阻塞
     整个生态的索引滚动）；全部失败 → 非零退出；
   - 版本以插件仓库 plugin.json 为准（补丁通道 latest 仅用于交叉校验告警）；
@@ -34,24 +34,27 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path as _P
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(_P(__file__).resolve().parent))
 import minisign_py
 
 ORG = "abyss-tool"
-# v0.8.0 大内置化：原六个重型插件（terminal / python-lab / sandbox /
-# media-lab / network-guard / backup）全部并入主壳内置路线，仓库已归档，
-# 不再聚合；插件生态收缩为「自带完整引擎」的三个代表 ——
-# 应用构建器（构建底座）/ 病毒拦截（特征引擎）/ 虚拟机（QEMU）。
+# hubVersion 0.4.0 承载形态（SRS-102 / ADR-100 D-4）：
+#   - abyss-plugin-linux 新引擎级插件入位（linux-runtime-v1 唯一提供方）；
+#   - abyss-plugin-virtual-machine 归档（QEMU 能力收编为 QEMU_VM 执行域）；
+#   - 活跃引擎级插件维持 3 个：应用构建器（瘦客户端）/ 病毒拦截 / Linux。
 REPOS = [
     "abyss-plugin-app-builder",
     "abyss-plugin-virus-guard",
-    "abyss-plugin-virtual-machine",
+    "abyss-plugin-linux",
 ]
 INDEX_PATH = "plugins.json"
+# hubVersion 语义化滚动：0.3.0 → 0.4.0（索引字段增量：depends / provides /
+# capabilities / assetChannel / minHost 透传，DC-100 §4）。
+HUB_VERSION = "0.4.0"
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
-UA = "abyss-plugin-hub-sync/1.0"
+UA = "abyss-plugin-hub-sync/1.1"
 
 
 def http_get(url: str, accept: str = "application/vnd.github+json", retries: int = 3) -> bytes:
@@ -104,11 +107,11 @@ def latest_apk_asset(repo: str) -> dict | None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="插件中心索引聚合（N-SEC-001 签名）")
-    parser.add_argument("--seed-file", type=Path, default=None,
+    parser = argparse.ArgumentParser(description="插件中心索引聚合（hubVersion 0.4.0 · N-SEC-001 签名）")
+    parser.add_argument("--seed-file", type=_P, default=None,
                         help="清单签名私钥（raw seed base64 单行；CI secret 原文）。"
                         "索引有变化时必填，缺失即 fail-closed 拒绝滚动")
-    parser.add_argument("--pubkey-file", type=Path, default=None,
+    parser.add_argument("--pubkey-file", type=_P, default=None,
                         help="清单签名公钥文本（与客户端 TRUSTED_KEYS 一致）")
     args = parser.parse_args()
 
@@ -126,6 +129,8 @@ def main() -> None:
             manifest = fetch_json(raw(repo, "plugin.json"))
         except Exception as e:
             warnings.append(f"{repo}: plugin.json 拉取失败 → {e}（保留旧条目）")
+            if repo in old_entries:
+                entries.append(old_entries[repo])
             continue
         pid = manifest.get("id", repo)
         if pid != repo:
@@ -142,6 +147,7 @@ def main() -> None:
             "repo": f"{ORG}/{repo}",
             "category": manifest.get("category", "tools"),
             "version": manifest.get("version", "0.0.0"),
+            "minHost": manifest.get("minHost", 1),
             "minApp": manifest.get("minApp", "0.1.0"),
             "summary": manifest.get("summary", ""),
             "icon": manifest.get("icon"),
@@ -155,6 +161,14 @@ def main() -> None:
         shizuku = manifest.get("shizuku")
         if isinstance(shizuku, dict):
             entry["shizuku"] = shizuku
+        # ── hubVersion 0.4.0 增量：v2 manifest 字段透传（DC-100 §4，
+        #    不手工维护 —— 宿主 PluginBroker 依赖解析的事实源）──────────
+        for field in ("provides", "depends", "assetChannel"):
+            value = manifest.get(field)
+            if value:
+                entry[field] = value
+        if isinstance(manifest.get("capabilities"), dict) and manifest["capabilities"]:
+            entry["capabilities"] = manifest["capabilities"]
         if channel_latest is not None and channel_latest != entry["version"]:
             warnings.append(
                 f"{repo}: 补丁通道 latest({channel_latest}) 与 manifest 版本({entry['version']}) 不一致"
@@ -166,11 +180,10 @@ def main() -> None:
         sys.exit(1)
 
     entries.sort(key=lambda p: (p["category"], p["id"]))
-    hub_version = old.get("hubVersion", "0.2.0")
     index = {
         "schema": "abyss-plugin-index-v1",
         "generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "hubVersion": hub_version,
+        "hubVersion": HUB_VERSION,
         "plugins": entries,
     }
 
@@ -179,12 +192,12 @@ def main() -> None:
         return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2)
 
     changed = normalize(index) != normalize(old)
+    sig_path = Path(INDEX_PATH + ".minisig")
+
     if not changed:
         print(f"[sync] 索引无变化（{len(entries)} 个插件），跳过提交")
-        # ── N-SEC-001 补签：索引静止但清单尚未签名（首签落地前常态）——
-        # 客户端对 plugins.json 先验签再解析，签名缺失 = 插件中心不可用。
-        # 材料可用时补签（幂等：已有签名且仍验过则跳过，不产生空提交）。
-        sig_path = Path(INDEX_PATH + ".minisig")
+        # ── N-SEC-001 补签：索引静止但签名缺失（首签落地前常态）——
+        # 材料可用时幂等补签（镜像 main 的补签语义，不产生空提交）。
         if (args.seed_file and args.pubkey_file
                 and Path(INDEX_PATH).exists() and not sig_path.exists()):
             try:
@@ -229,13 +242,15 @@ def main() -> None:
             sys.exit(1)
         with open(INDEX_PATH, "w", encoding="utf-8", newline="\n") as f:
             f.write(text)
-        Path(INDEX_PATH + ".minisig").write_text(sig, encoding="ascii")
-        print(f"[sync] plugins.json 已重新生成并签名（{len(entries)} 个插件，.minisig 同 commit 上库）")
+        sig_path.write_text(sig, encoding="ascii")
+        print(f"[sync] plugins.json 已重新生成并签名（{len(entries)} 个插件 · "
+              f"hubVersion {HUB_VERSION}，.minisig 同 commit 上库）")
 
     for w in warnings:
         print(f"[sync] ⚠ {w}", file=sys.stderr)
     apk_count = sum(1 for e in entries if e["apk"])
-    print(f"[sync] ✓ 聚合完成：{len(entries)} 插件 · {apk_count} 个已发布 APK")
+    print(f"[sync] ✓ 聚合完成：{len(entries)} 插件 · {apk_count} 个已发布 APK · "
+          f"hubVersion {HUB_VERSION}")
 
 
 if __name__ == "__main__":
