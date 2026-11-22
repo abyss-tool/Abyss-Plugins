@@ -26,3 +26,35 @@
 > **准入门槛（v0.8.0 收紧）**：新插件必须「自带完整引擎」（构建底座 /
 > 病毒特征引擎 / 整机虚拟机级别）—— 其余能力一律直接实现进主壳
 > （ToolStatus.BUILT_IN），不建插件仓。
+
+## 带依赖的新插件（HOST_API v2 · hubVersion 0.4.0 起）
+
+消费其它插件能力的插件（瘦客户端，如应用构建器）在 7 步之外追加：
+
+8. **声明 depends**：`plugin.json` 的 `depends[]` 逐条写明
+   `pluginId` / `capability` / `versionRange`（如 `>=0.2.0 <1.0.0`）/
+   `optional: false` / `reason`（≥10 字符人话）；`minHost` 必须为 2
+   （依赖解析与能力绑定需 v2 宿主）；
+9. **不得声明 shizuku**：消费方不持有 Shizuku 授权 —— 引擎与授权都在
+   被依赖插件内（当前唯一授权持有方 = abyss-plugin-linux）；
+10. **不自带引擎**：仓库静态扫描 0 文件含底座实现关键字
+    （`proot` / `rootfs` / `qemu` / `ptrace` / `ILinuxRuntime` /
+    `rikka.shizuku`），运行环境经宿主 PluginBroker 中介获取受限
+    `ILinuxSession` 代理（永不直连，ARC-102）。
+
+Hub CI 会对以上 3 条逐项校验：depends 指向存在且未归档的 id、
+capability 命中被依赖方 `provides[]`、声明 depends 的瘦客户端无
+shizuku 声明（`validate_hub.py`）。
+
+## 归档与承接（HUB-014 / ADR-100 D-4）
+
+插件仓归档（如 2026-11-22 的 `abyss-plugin-virtual-machine`）：
+
+1. 停止一切补丁发布（`patches/index.json` 保持现状不再滚动）；
+2. 本仓 `sync_index.py` 的 `REPOS` 移除该仓 —— 索引条目随下轮聚合消失；
+3. `validate_hub.py` 的 `ARCHIVED_IDS` 登记该 id —— 再次出现即红灯；
+4. GitHub 仓库设置 `archived=true`（转只读）；
+5. 发布归档公告（指明能力去向，如 `QEMU_VM 执行域 → abyss-plugin-linux`，
+   规格承接 `LIN-002` / `DC-102`）。
+
+归档能力不得复活为插件（SRS-004 FR-005）。

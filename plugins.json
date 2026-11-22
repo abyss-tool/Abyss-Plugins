@@ -1,62 +1,42 @@
 {
   "schema": "abyss-plugin-index-v1",
-  "generatedAt": "2026-11-21T18:56:39Z",
-  "hubVersion": "0.3.0",
+  "generatedAt": "2026-11-22T00:00:00Z",
+  "hubVersion": "0.4.0",
   "plugins": [
     {
       "id": "abyss-plugin-app-builder",
       "name": "应用构建器",
       "repo": "abyss-tool/abyss-plugin-app-builder",
       "category": "dev",
-      "version": "0.1.0",
-      "minApp": "0.2.0",
-      "summary": "手机端 APK 构建器：Alpine + PRoot 底座，Anpyra / 内置工具链 / 标准 Gradle 三条路径自由选择，失败可切换，支持独立 Shizuku 授权。",
+      "version": "0.2.0",
+      "minHost": 2,
+      "minApp": "0.10.0",
+      "summary": "手机端 APK 构建：静态预检 + Anpyra / aapt2 固定壳 / 标准 Gradle 三路径，依赖 Linux 插件提供的运行环境。",
       "icon": "🏗",
       "permissions": [
         "FOREGROUND_SERVICE",
         "WAKE_LOCK",
-        "REQUEST_INSTALL_PACKAGES"
+        "REQUEST_INSTALL_PACKAGES",
+        "INTERNET"
       ],
       "apk": null,
       "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-app-builder/main/patches/index.json",
       "roadmap": [
-        "v0.2 底座拉起：Alpine rootfs + PRoot 可用性探测（Shizuku 优先，纯 PRoot 降级）",
+        "v0.2 依赖握手与会话编排（APP-100：四类失败引导 + SessionGrant 消费）",
         "v0.3 路径一：Anpyra 纯 Python 构建（轻量项目）",
         "v0.4 路径二：内置工具链 aapt2 + 固定壳 DEX（资源 / HTML 打包）",
         "v0.5 路径三：标准 Gradle 构建（ARM64 工具链 + 资源约束）",
-        "v0.6 三选一交互层：预检提示 / 推荐标记 / 失败切换 / 底座隔离"
+        "v0.6 三选一交互层：预检提示 / 推荐标记 / 失败切换 / 会话状态隔离"
       ],
-      "shizuku": {
-        "ownAuth": true,
-        "reason": "构建底座（Alpine + PRoot）经 Shizuku 的 ADB shell 上下文启动，绕过 ColorOS 等厂商对普通应用 ptrace 的限制；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
-      }
-    },
-    {
-      "id": "abyss-plugin-virtual-machine",
-      "name": "虚拟机",
-      "repo": "abyss-tool/abyss-plugin-virtual-machine",
-      "category": "sandbox",
-      "version": "0.1.0",
-      "minApp": "0.8.0",
-      "summary": "QEMU 级完整虚拟机：ARM/x86 系统镜像运行（Alpine / Windows / DOS），VNC 显示与外部输入路由，快照与性能档位，引擎级大插件。",
-      "icon": "🖳",
-      "permissions": [
-        "INTERNET",
-        "FOREGROUND_SERVICE",
-        "WAKE_LOCK"
-      ],
-      "apk": null,
-      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-virtual-machine/main/patches/index.json",
-      "roadmap": [
-        "v0.2 QEMU 用户态引擎拉起（TCG，免 KVM）与镜像管理",
-        "v0.3 VNC 显示管线 + 输入路由（触屏 → PS/2 / USB Tablet）",
-        "v0.4 镜像市场：Alpine / Debian / DOS / Windows XP 模板",
-        "v0.5 快照 / 挂起恢复与性能档位"
-      ],
-      "shizuku": {
-        "ownAuth": true,
-        "reason": "QEMU 用户态引擎在无 Root 设备上需更大内存映射与进程优先级，经 Shizuku（ADB shell 上下文）拉起以绕过普通应用进程的 RLIMIT_MEMLOCK 与 oom_adj 限制；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
-      }
+      "depends": [
+        {
+          "pluginId": "abyss-plugin-linux",
+          "capability": "linux-runtime-v1",
+          "versionRange": ">=0.2.0 <1.0.0",
+          "optional": false,
+          "reason": "构建需要 Linux 运行环境（PRoot 用户态 / QEMU 完整系统），由 Linux 插件统一提供并持有 Shizuku 授权。"
+        }
+      ]
     },
     {
       "id": "abyss-plugin-virus-guard",
@@ -64,8 +44,9 @@
       "repo": "abyss-tool/abyss-plugin-virus-guard",
       "category": "system",
       "version": "0.1.0",
+      "minHost": 1,
       "minApp": "0.8.0",
-      "summary": "安装事件拦截 + 病毒特征引擎：ClamAV 级本地签名库 + VirusTotal 云查询 + 已装应用全盘扫描与处置面板，支持独立 Shizuku 授权（安装监听与静默处置）。",
+      "summary": "安装事件拦截 + 病毒特征引擎：ClamAV 级本地签名库 + VirusTotal 云查询 + 已装应用全盘扫描与处置面板，支持独立 Shizuku 授权（安装监听）。",
       "icon": "🦠",
       "permissions": [
         "INTERNET",
@@ -83,6 +64,96 @@
       "shizuku": {
         "ownAuth": true,
         "reason": "安装事件拦截经 Shizuku（ADB shell 上下文）挂接 pm install-session 监听与静默卸载处置 —— 免 Shizuku 时降级为普通安装广播监听（仅提示，不能拦截）；本插件为独立 APK，按 Shizuku per-app 授权机制需单独授权一次。"
+      }
+    },
+    {
+      "id": "abyss-plugin-linux",
+      "name": "Linux 运行环境",
+      "repo": "abyss-tool/abyss-plugin-linux",
+      "category": "tools",
+      "version": "0.2.0",
+      "minHost": 2,
+      "minApp": "0.10.0",
+      "summary": "自包含 Linux 运行环境：PRoot 用户态 + QEMU 完整系统双执行域，统一 RuntimeSession 会话与 Shizuku 统一授权，唯一向生态提供 linux-runtime-v1 能力。",
+      "icon": "🐧",
+      "permissions": [
+        "INTERNET",
+        "FOREGROUND_SERVICE",
+        "WAKE_LOCK"
+      ],
+      "apk": null,
+      "patchChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-linux/main/patches/index.json",
+      "roadmap": [
+        "v0.2 PRoot 域：rootfs 资产通道 + 会话状态机 + 探测降级链",
+        "v0.3 跨插件能力绑定：SessionGrant + 受限 ILinuxSession 代理",
+        "v0.4 QEMU 域：TCG 引擎 + 镜像 + VNC 回环 + 快照",
+        "v0.5 资产差量：vcdiff 差量更新与配额 LRU 收口"
+      ],
+      "shizuku": {
+        "ownAuth": true,
+        "reason": "PRoot/QEMU 引擎经 Shizuku 的 ADB shell 上下文（uid 2000）拉起，绕过普通应用沙箱对 ptrace 与内存锁的限制；本插件为独立 APK，按 per-app 授权机制需单独授权一次，且是全生态唯一持有方。"
+      },
+      "provides": [
+        {
+          "capability": "linux-runtime-v1",
+          "since": "0.2.0",
+          "stable": true
+        }
+      ],
+      "assetChannel": "https://raw.githubusercontent.com/abyss-tool/abyss-plugin-linux/main/assets/index.json",
+      "capabilities": {
+        "linux-runtime-v1": {
+          "hostApi": 2,
+          "domains": [
+            {
+              "id": "PROOT_USERLAND",
+              "kernel": "shared-android",
+              "coldStartMs": 8000,
+              "features": [
+                "EXEC",
+                "PTY",
+                "FILE_IO",
+                "PKG_INSTALL"
+              ],
+              "assets": [
+                "rootfs",
+                "toolchain"
+              ]
+            },
+            {
+              "id": "QEMU_VM",
+              "kernel": "guest-linux",
+              "coldStartMs": 180000,
+              "features": [
+                "EXEC",
+                "PTY",
+                "FILE_IO",
+                "PKG_INSTALL",
+                "VNC",
+                "SNAPSHOT",
+                "PORT_FORWARD"
+              ],
+              "assets": [
+                "image"
+              ]
+            }
+          ],
+          "arch": [
+            "arm64"
+          ],
+          "limits": {
+            "maxMemoryMb": 2048,
+            "maxExecTimeoutSec": 1800,
+            "maxOutputBytes": 1048576,
+            "maxConcurrentExec": 1,
+            "defaultQuotaGb": 8
+          },
+          "auth": {
+            "shizuku": "ownAuth",
+            "grantTtlSec": 300,
+            "mediator": "PluginBroker"
+          }
+        }
       }
     }
   ]
