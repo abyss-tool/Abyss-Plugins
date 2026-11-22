@@ -41,10 +41,34 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install pynacl (N-SEC-001 清单签名)
+        run: pip install --quiet pynacl
+
+      # ── N-SEC-001 清单签名材料（fail-closed：索引有变化而材料缺失 →
+      # sync_index.py 拒绝滚动）。公钥与客户端 TRUSTED_KEYS / 主仓
+      # ChannelSignatureVerifier.kt 同步（唯一事实源 = 主仓 Kotlin 源）。
+      - name: Prepare manifest signing keys (N-SEC-001)
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -z "$RELEASE_SIGNING_KEY" ]; then
+            echo "::error::缺少 RELEASE_SIGNING_KEY secret（raw Ed25519 seed base64 单行）—— N-SEC-001 清单签名强制"
+            exit 1
+          fi
+          SIGNING_DIR="$RUNNER_TEMP/abyss-manifest-signing"
+          mkdir -p "$SIGNING_DIR"
+          printf '%s' "$RELEASE_SIGNING_KEY" > "$SIGNING_DIR/seed.txt"
+          cat > "$SIGNING_DIR/pubkey.txt" <<'PK'
+          untrusted comment: Abyss-Tools manifest signing public key (meng4117222)
+          RWRx16ORC4gsdxs6DsnctDYagiRptPX1NgFcVpQNYqh/BXGhPAHebh3B
+          PK
+          echo "SEED_FILE=$SIGNING_DIR/seed.txt" >> "$GITHUB_ENV"
+          echo "PUBKEY_FILE=$SIGNING_DIR/pubkey.txt" >> "$GITHUB_ENV"
+
       - name: Aggregate index from member repos
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 tools/sync_index.py
+        run: python3 tools/sync_index.py --seed-file "$SEED_FILE" --pubkey-file "$PUBKEY_FILE"
 
       - name: Validate aggregated index
         run: |
@@ -55,11 +79,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet; then
+          git add plugins.json plugins.json.minisig 2>/dev/null || git add plugins.json
+          if git diff --cached --quiet; then
             echo "[sync] 无变化，无需提交"
           else
-            git add plugins.json
-            git commit -m "chore(index): 聚合成员仓库 → plugins.json 自动滚动 [skip ci]"
+            git commit -m "chore(index): 聚合成员仓库 → plugins.json 自动滚动（含 N-SEC-001 签名）[skip ci]"
             git push
-            echo "[sync] ✓ 索引已提交"
+            echo "[sync] ✓ 索引已提交（清单 + detached 签名原子入库）"
           fi

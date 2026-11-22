@@ -7,6 +7,12 @@
   3. GitHub Releases API     —— APK 资产（url / sizeBytes / digest 摘要）；
                                 无发布 → apk 保持 null（框架预览期常态）
 
+N-SEC-001（M1 起）：plugins.json 落盘后立即产出 detached 签名
+`plugins.json.minisig`（与清单同 commit 原子上库）—— 私钥经
+--seed-file（CI secret RELEASE_SIGNING_KEY 原文 base64 单行），公钥经
+--pubkey-file（与客户端 TRUSTED_KEYS / 主仓 publisher_pubkey.py 提取值
+一致）；索引有变化而签名材料缺失 → fail-closed 拒绝滚动。
+
 聚合纪律：
   - 成员仓库清单是插件中心仓的注册表（本文件 REPOS）—— 新插件仓库加入
     时在此登记（docs/ADDING_PLUGINS.md 有全流程）；
@@ -20,6 +26,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -27,6 +34,10 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import minisign_py
 
 ORG = "abyss-tool"
 # v0.8.0 大内置化：原六个重型插件（terminal / python-lab / sandbox /
@@ -93,6 +104,14 @@ def latest_apk_asset(repo: str) -> dict | None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="插件中心索引聚合（N-SEC-001 签名）")
+    parser.add_argument("--seed-file", type=Path, default=None,
+                        help="清单签名私钥（raw seed base64 单行；CI secret 原文）。"
+                        "索引有变化时必填，缺失即 fail-closed 拒绝滚动")
+    parser.add_argument("--pubkey-file", type=Path, default=None,
+                        help="清单签名公钥文本（与客户端 TRUSTED_KEYS 一致）")
+    args = parser.parse_args()
+
     old: dict = {}
     try:
         old = json.loads(open(INDEX_PATH, encoding="utf-8").read())
@@ -159,13 +178,59 @@ def main() -> None:
     def normalize(obj: dict) -> str:
         return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2)
 
-    if normalize(index) == normalize(old):
+    changed = normalize(index) != normalize(old)
+    if not changed:
         print(f"[sync] 索引无变化（{len(entries)} 个插件），跳过提交")
+        # ── N-SEC-001 补签：索引静止但清单尚未签名（首签落地前常态）——
+        # 客户端对 plugins.json 先验签再解析，签名缺失 = 插件中心不可用。
+        # 材料可用时补签（幂等：已有签名且仍验过则跳过，不产生空提交）。
+        sig_path = Path(INDEX_PATH + ".minisig")
+        if (args.seed_file and args.pubkey_file
+                and Path(INDEX_PATH).exists() and not sig_path.exists()):
+            try:
+                seed, keynum, _ = minisign_py.load_seed(
+                    args.seed_file.read_text(encoding="utf-8"),
+                    args.pubkey_file.read_text(encoding="utf-8"),
+                )
+                pubkey_text = args.pubkey_file.read_text(encoding="utf-8")
+                raw = Path(INDEX_PATH).read_bytes()
+                sig = minisign_py.sign_message(
+                    seed, keynum, raw,
+                    "signature from abyss release key", "plugins.json")
+                if not minisign_py.verify(pubkey_text, sig, raw):
+                    print("[sync] ✗ 补签自验失败 —— 拒绝写入", file=sys.stderr)
+                    sys.exit(1)
+                sig_path.write_text(sig, encoding="ascii")
+                print("[sync] ✓ 首签补齐：plugins.json.minisig 已产出（本 commit 一并上库）")
+            except minisign_py.MinisignError as e:
+                print(f"[sync] ⚠ 补签失败（索引未变更，保持无签名态）：{e}", file=sys.stderr)
     else:
-        with open(INDEX_PATH, "w", encoding="utf-8") as f:
-            json.dump(index, f, ensure_ascii=False, indent=2)
-            f.write("\n")
-        print(f"[sync] plugins.json 已重新生成（{len(entries)} 个插件）")
+        text = json.dumps(index, ensure_ascii=False, indent=2) + "\n"
+        raw = text.encode("utf-8")
+        # ── N-SEC-001：索引有变化 → 签名材料强制（fail-closed）────────
+        if not args.seed_file or not args.pubkey_file:
+            print("[sync] ✗ 索引有变化但缺清单签名材料（--seed-file/--pubkey-file，"
+                  "CI secret RELEASE_SIGNING_KEY）—— N-SEC-001 强制签名，拒绝滚动",
+                  file=sys.stderr)
+            sys.exit(1)
+        try:
+            seed, keynum, _ = minisign_py.load_seed(
+                args.seed_file.read_text(encoding="utf-8"),
+                args.pubkey_file.read_text(encoding="utf-8"),
+            )
+        except minisign_py.MinisignError as e:
+            print(f"[sync] ✗ 签名材料校验失败：{e}", file=sys.stderr)
+            sys.exit(1)
+        pubkey_text = args.pubkey_file.read_text(encoding="utf-8")
+        sig = minisign_py.sign_message(
+            seed, keynum, raw, "signature from abyss release key", "plugins.json")
+        if not minisign_py.verify(pubkey_text, sig, raw):
+            print("[sync] ✗ plugins.json.minisig 签名自验失败 —— 拒绝滚动", file=sys.stderr)
+            sys.exit(1)
+        with open(INDEX_PATH, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+        Path(INDEX_PATH + ".minisig").write_text(sig, encoding="ascii")
+        print(f"[sync] plugins.json 已重新生成并签名（{len(entries)} 个插件，.minisig 同 commit 上库）")
 
     for w in warnings:
         print(f"[sync] ⚠ {w}", file=sys.stderr)
