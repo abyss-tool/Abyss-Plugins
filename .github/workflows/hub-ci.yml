@@ -25,6 +25,12 @@ jobs:
       - name: Python syntax pre-check (py_compile all tools)
         run: python3 -m py_compile tools/*.py
 
+      # ── N-SEC-001 验签依赖：plugins.json.minisig 落地后（sync-index 补签
+      #    成功），validate_hub.py 进入验签路径需要 pynacl —— 此前签名缺失
+      #    该路径从未被执行，装依赖步骤一直缺位（被 B-02 修复暴露）
+      - name: Install pynacl (signature verification)
+        run: pip install --quiet pynacl
+
       - name: Validate plugins.json
         run: |
           chmod +x tools/validate_hub.py
