@@ -20,6 +20,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ── 同类缺陷防御（B-01/新增 Path 断裂）：门禁脚本先过语法编译，
+      #    再跑业务校验 —— NameError 级缺陷不再能溜进 main
+      - name: Python syntax pre-check (py_compile all tools)
+        run: python3 -m py_compile tools/*.py
+
       - name: Validate plugins.json
         run: |
           chmod +x tools/validate_hub.py
