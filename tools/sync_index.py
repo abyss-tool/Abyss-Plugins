@@ -34,9 +34,9 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from pathlib import Path as _P
+from pathlib import Path
 
-sys.path.insert(0, str(_P(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import minisign_py
 
 ORG = "abyss-tool"
@@ -108,10 +108,10 @@ def latest_apk_asset(repo: str) -> dict | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="插件中心索引聚合（hubVersion 0.4.0 · N-SEC-001 签名）")
-    parser.add_argument("--seed-file", type=_P, default=None,
+    parser.add_argument("--seed-file", type=Path, default=None,
                         help="清单签名私钥（raw seed base64 单行；CI secret 原文）。"
                         "索引有变化时必填，缺失即 fail-closed 拒绝滚动")
-    parser.add_argument("--pubkey-file", type=_P, default=None,
+    parser.add_argument("--pubkey-file", type=Path, default=None,
                         help="清单签名公钥文本（与客户端 TRUSTED_KEYS 一致）")
     args = parser.parse_args()
 
